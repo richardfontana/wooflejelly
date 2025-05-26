@@ -2,9 +2,9 @@
 port module Main exposing (main)
 
 import Browser
-import Html exposing (Html, div, text, button, span)
-import Html.Attributes exposing (style)
-import Html.Events exposing (onClick)
+import Html exposing (Html, div, text, button, span, select, option)
+import Html.Attributes exposing (style, selected, value)
+import Html.Events exposing (onClick, onInput)
 import Json.Decode
 import Json.Encode
 import Json.Decode as Decode exposing (Value)
@@ -72,7 +72,15 @@ update msg model =
 view : Model -> Html Msg
 view model = 
     div [] 
-        [ button [ onClick RequestDiff ] [ text "Run Diff" ]
+        [ div [] 
+            [ text "License A: "
+            , viewSelect SelectA model.licenseA
+            ]
+        , div []
+            [ text "License B: "
+            , viewSelect SelectB model.licenseB
+            ]
+        , button [ onClick RequestDiff ] [ text "Run Diff" ]
         , div [] (List.map viewDiff model.diffs)
         ]   
 
@@ -88,6 +96,20 @@ viewDiff diff =
         Delete txt ->
             span [ style "background-color" "#fdd", style "text-decoration" "line-through" ] [ text txt ]
 
+
+viewSelect : (String -> Msg) -> String -> Html Msg
+viewSelect msgConstructor selectedValue = 
+    Html.select 
+        [ Html.Events.onInput msgConstructor ]
+        ( List.map (viewOption selectedValue) licenseOptions)  
+
+viewOption : String -> String -> Html Msg
+viewOption selected current = 
+    Html.option 
+        [ Html.Attributes.value current
+        , Html.Attributes.selected (current == selected)
+        ]
+        [ text current ]
 
 -- MAIN
 

@@ -5271,6 +5271,12 @@ var $author$project$Main$update = F2(
 		}
 	});
 var $author$project$Main$RequestDiff = {$: 'RequestDiff'};
+var $author$project$Main$SelectA = function (a) {
+	return {$: 'SelectA', a: a};
+};
+var $author$project$Main$SelectB = function (a) {
+	return {$: 'SelectB', a: a};
+};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
@@ -5333,12 +5339,108 @@ var $author$project$Main$viewDiff = function (diff) {
 					]));
 	}
 };
+var $author$project$Main$licenseOptions = _List_fromArray(
+	['MIT', 'Apache-2.0', 'GPL-3.0-or-later', 'BSD-3-Clause', 'CC0-1.0']);
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$select = _VirtualDom_node('select');
+var $elm$html$Html$option = _VirtualDom_node('option');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Main$viewOption = F2(
+	function (selected, current) {
+		return A2(
+			$elm$html$Html$option,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$value(current),
+					$elm$html$Html$Attributes$selected(
+					_Utils_eq(current, selected))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text(current)
+				]));
+	});
+var $author$project$Main$viewSelect = F2(
+	function (msgConstructor, selectedValue) {
+		return A2(
+			$elm$html$Html$select,
+			_List_fromArray(
+				[
+					$elm$html$Html$Events$onInput(msgConstructor)
+				]),
+			A2(
+				$elm$core$List$map,
+				$author$project$Main$viewOption(selectedValue),
+				$author$project$Main$licenseOptions));
+	});
 var $author$project$Main$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_Nil,
 		_List_fromArray(
 			[
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('License A: '),
+						A2($author$project$Main$viewSelect, $author$project$Main$SelectA, model.licenseA)
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('License B: '),
+						A2($author$project$Main$viewSelect, $author$project$Main$SelectB, model.licenseB)
+					])),
 				A2(
 				$elm$html$Html$button,
 				_List_fromArray(
