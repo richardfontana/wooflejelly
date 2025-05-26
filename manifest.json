@@ -20,11 +20,11 @@
   "content-scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content-script.js"],
+      "js": ["dist/content-script.js"],
       "run-at": "document_idle"
     }
   ],
   "background": {
-    "service-worker": "src/background.js"
+    "service-worker": "dist/background.js"
   }
 } 
