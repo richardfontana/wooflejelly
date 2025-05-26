@@ -15,6 +15,7 @@ type alias Model =
     { diffs : List Diff
     , licenseA : String
     , licenseB : String
+    , error : Maybe String 
     }
 
 init : () -> ( Model, Cmd Msg )
@@ -22,6 +23,7 @@ init _ =
     ( { diffs = [] 
       , licenseA = "MIT"
       , licenseB = "Apache-2.0"
+      , error = Nothing
       }
     , Cmd.none 
     )
@@ -43,7 +45,7 @@ type Msg
     | SelectB String
     | RequestDiff
     | GotRawJson Json.Decode.Value
-
+    | GotError String
 
 -- UPDATE
 
@@ -57,15 +59,17 @@ update msg model =
             ( { model | licenseB = id }, Cmd.none) 
 
         RequestDiff ->
-            ( model, requestDiff ( model.licenseA, model.licenseB ) )
+            ( { model | error = Nothing }, requestDiff ( model.licenseA, model.licenseB ) )
         
         GotRawJson value -> 
             case Json.Decode.decodeValue (Json.Decode.list diffDecoder) value of 
                 Ok diffs -> 
-                    ( { model | diffs = diffs }, Cmd.none )
-                Err err -> 
-                    ( model, Cmd.none )
+                    ( { model | diffs = diffs, error = Nothing }, Cmd.none )
+                Err _ -> 
+                    ( { model | error = Just "Decoding failed." }, Cmd.none )
 
+        GotError mesg ->
+            ( { model | error = Just mesg, diffs = [] }, Cmd.none )
 
 -- VIEW
 
@@ -81,8 +85,14 @@ view model =
             , viewSelect SelectB model.licenseB
             ]
         , button [ onClick RequestDiff ] [ text "Run Diff" ]
-        , div [] (List.map viewDiff model.diffs)
-        ]   
+        , case model.error of 
+            Just msg -> 
+                div [ style "color" "red" ] [ text ("Error: " ++ msg) ]
+            
+            Nothing -> 
+                div [] (List.map viewDiff model.diffs)        
+         ]
+
 
 viewDiff : Diff -> Html msg
 viewDiff diff =
@@ -129,6 +139,9 @@ port requestDiff : ( ( String, String ) -> Cmd msg )
 
 port receiveDiffResult : (Json.Decode.Value -> msg) -> Sub msg
 
+port receiveDiffError : (String -> msg) -> Sub msg
+
+
 type Diff
     = Equal String
     | Insert String
@@ -152,5 +165,7 @@ makeDiff op text =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ = 
-    receiveDiffResult GotRawJson
-
+    Sub.batch 
+        [ receiveDiffResult GotRawJson
+        , receiveDiffError GotError
+        ]

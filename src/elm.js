@@ -5163,16 +5163,27 @@ var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
-		{diffs: _List_Nil, licenseA: 'MIT', licenseB: 'Apache-2.0'},
+		{diffs: _List_Nil, error: $elm$core$Maybe$Nothing, licenseA: 'MIT', licenseB: 'Apache-2.0'},
 		$elm$core$Platform$Cmd$none);
+};
+var $author$project$Main$GotError = function (a) {
+	return {$: 'GotError', a: a};
 };
 var $author$project$Main$GotRawJson = function (a) {
 	return {$: 'GotRawJson', a: a};
 };
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$receiveDiffError = _Platform_incomingPort('receiveDiffError', $elm$json$Json$Decode$string);
 var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $author$project$Main$receiveDiffResult = _Platform_incomingPort('receiveDiffResult', $elm$json$Json$Decode$value);
 var $author$project$Main$subscriptions = function (_v0) {
-	return $author$project$Main$receiveDiffResult($author$project$Main$GotRawJson);
+	return $elm$core$Platform$Sub$batch(
+		_List_fromArray(
+			[
+				$author$project$Main$receiveDiffResult($author$project$Main$GotRawJson),
+				$author$project$Main$receiveDiffError($author$project$Main$GotError)
+			]));
 };
 var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $elm$json$Json$Decode$field = _Json_decodeField;
@@ -5198,7 +5209,6 @@ var $author$project$Main$makeDiff = F2(
 				return $author$project$Main$Equal(text);
 		}
 	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$Main$diffDecoder = A3(
 	$elm$json$Json$Decode$map2,
 	$author$project$Main$makeDiff,
@@ -5248,10 +5258,12 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'RequestDiff':
 				return _Utils_Tuple2(
-					model,
+					_Utils_update(
+						model,
+						{error: $elm$core$Maybe$Nothing}),
 					$author$project$Main$requestDiff(
 						_Utils_Tuple2(model.licenseA, model.licenseB)));
-			default:
+			case 'GotRawJson':
 				var value = msg.a;
 				var _v1 = A2(
 					$elm$json$Json$Decode$decodeValue,
@@ -5262,12 +5274,27 @@ var $author$project$Main$update = F2(
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{diffs: diffs}),
+							{diffs: diffs, error: $elm$core$Maybe$Nothing}),
 						$elm$core$Platform$Cmd$none);
 				} else {
-					var err = _v1.a;
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								error: $elm$core$Maybe$Just('Decoding failed.')
+							}),
+						$elm$core$Platform$Cmd$none);
 				}
+			default:
+				var mesg = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							diffs: _List_Nil,
+							error: $elm$core$Maybe$Just(mesg)
+						}),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Main$RequestDiff = {$: 'RequestDiff'};
@@ -5296,11 +5323,11 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$span = _VirtualDom_node('span');
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$Main$viewDiff = function (diff) {
 	switch (diff.$) {
 		case 'Equal':
@@ -5451,10 +5478,27 @@ var $author$project$Main$view = function (model) {
 					[
 						$elm$html$Html$text('Run Diff')
 					])),
-				A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				A2($elm$core$List$map, $author$project$Main$viewDiff, model.diffs))
+				function () {
+				var _v0 = model.error;
+				if (_v0.$ === 'Just') {
+					var msg = _v0.a;
+					return A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'color', 'red')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Error: ' + msg)
+							]));
+				} else {
+					return A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						A2($elm$core$List$map, $author$project$Main$viewDiff, model.diffs));
+				}
+			}()
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
