@@ -1,3 +1,5 @@
+![](images/wooflejelly.jpg)
+
 # Wooflejelly
 
 Wooflejelly is, at present, an aspirational attempt to recreate 
