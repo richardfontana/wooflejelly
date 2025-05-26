@@ -9,26 +9,26 @@ const app = Elm.Main.init({
 
 // When Elm requests a diff, run it in JS and send it back
 app.ports.requestDiff.subscribe(() => {
-  const text1 = "A candle in a jar of razzleberry dressing.";
-  const text2 = "And on the tree a star of shining Christmas gold.";
 
   const dmp = new diff_match_patch();
-  const diffs = dmp.diff_main(text1, text2);
+  const diffs = dmp.diff_main(
+    "SPDX license identifiers are the best.",
+    "SPDX license identifiers are really good."
+  );
   dmp.diff_cleanupSemantic(diffs);
 
-  let result = '';
+  const result = [];	
   for (let i = 0; i < diffs.length; i++) {
     const op = diffs[i][0];
-    const data = diffs[i][1];    
-    if (op === 1) {
-      result += `[+${data}]`; // insertion
-    } else if (op === -1) {
-      result += `[-${data}]`; // deletion
-    } else {
-      result += data; // equal
-    }
-  }
+    const text = diffs[i][1];
 
-  app.ports.receiveDiffResult.send(result);
+    result.push({
+      op: op === 0 ? "equal" : op === 1 ? "insert" : "delete",
+      text: text
+    });
+  }    
+
+  console.log("Sending diff result:", result);
+  app.ports.receiveDiffResult.send(JSON.parse(JSON.stringify(result)));
 });
 

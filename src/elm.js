@@ -5163,17 +5163,49 @@ var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
-		{diffHtml: ''},
+		{diffs: _List_Nil},
 		$elm$core$Platform$Cmd$none);
 };
-var $author$project$Main$GotDiff = function (a) {
-	return {$: 'GotDiff', a: a};
+var $author$project$Main$GotRawJson = function (a) {
+	return {$: 'GotRawJson', a: a};
 };
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$Main$receiveDiffResult = _Platform_incomingPort('receiveDiffResult', $elm$json$Json$Decode$string);
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $author$project$Main$receiveDiffResult = _Platform_incomingPort('receiveDiffResult', $elm$json$Json$Decode$value);
 var $author$project$Main$subscriptions = function (_v0) {
-	return $author$project$Main$receiveDiffResult($author$project$Main$GotDiff);
+	return $author$project$Main$receiveDiffResult($author$project$Main$GotRawJson);
 };
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $author$project$Main$Delete = function (a) {
+	return {$: 'Delete', a: a};
+};
+var $author$project$Main$Equal = function (a) {
+	return {$: 'Equal', a: a};
+};
+var $author$project$Main$Insert = function (a) {
+	return {$: 'Insert', a: a};
+};
+var $author$project$Main$makeDiff = F2(
+	function (op, text) {
+		switch (op) {
+			case 'equal':
+				return $author$project$Main$Equal(text);
+			case 'insert':
+				return $author$project$Main$Insert(text);
+			case 'delete':
+				return $author$project$Main$Delete(text);
+			default:
+				return $author$project$Main$Equal(text);
+		}
+	});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$diffDecoder = A3(
+	$elm$json$Json$Decode$map2,
+	$author$project$Main$makeDiff,
+	A2($elm$json$Json$Decode$field, 'op', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'text', $elm$json$Json$Decode$string));
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $elm$core$Debug$log = _Debug_log;
 var $elm$json$Json$Encode$null = _Json_encodeNull;
 var $author$project$Main$requestDiff = _Platform_outgoingPort(
 	'requestDiff',
@@ -5182,17 +5214,36 @@ var $author$project$Main$requestDiff = _Platform_outgoingPort(
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'RequestDiff') {
-			return _Utils_Tuple2(
-				model,
-				$author$project$Main$requestDiff(_Utils_Tuple0));
-		} else {
-			var html = msg.a;
-			return _Utils_Tuple2(
-				_Utils_update(
+		switch (msg.$) {
+			case 'RequestDiff':
+				return _Utils_Tuple2(
 					model,
-					{diffHtml: html}),
-				$elm$core$Platform$Cmd$none);
+					$author$project$Main$requestDiff(_Utils_Tuple0));
+			case 'GotRawJson':
+				var value = msg.a;
+				var _v1 = A2(
+					$elm$json$Json$Decode$decodeValue,
+					$elm$json$Json$Decode$list($author$project$Main$diffDecoder),
+					value);
+				if (_v1.$ === 'Ok') {
+					var diffs = _v1.a;
+					return A2(
+						$elm$core$Debug$log,
+						'Decoded diffs',
+						_Utils_Tuple2(
+							_Utils_update(
+								model,
+								{diffs: diffs}),
+							$elm$core$Platform$Cmd$none));
+				} else {
+					var err = _v1.a;
+					return A2(
+						$elm$core$Debug$log,
+						'Decode error',
+						_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
+				}
+			default:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Main$RequestDiff = {$: 'RequestDiff'};
@@ -5215,9 +5266,49 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$html$Html$pre = _VirtualDom_node('pre');
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $elm$html$Html$span = _VirtualDom_node('span');
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $author$project$Main$viewDiff = function (diff) {
+	switch (diff.$) {
+		case 'Equal':
+			var txt = diff.a;
+			return A2(
+				$elm$html$Html$span,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(txt)
+					]));
+		case 'Insert':
+			var txt = diff.a;
+			return A2(
+				$elm$html$Html$span,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'background-color', '#dfd')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(txt)
+					]));
+		default:
+			var txt = diff.a;
+			return A2(
+				$elm$html$Html$span,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'background-color', '#fdd'),
+						A2($elm$html$Html$Attributes$style, 'text-decoration', 'line-through')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(txt)
+					]));
+	}
+};
 var $author$project$Main$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -5235,12 +5326,9 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$text('Run Diff')
 					])),
 				A2(
-				$elm$html$Html$pre,
+				$elm$html$Html$div,
 				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(model.diffHtml)
-					]))
+				A2($elm$core$List$map, $author$project$Main$viewDiff, model.diffs))
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(

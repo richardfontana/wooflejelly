@@ -1,0 +1,15 @@
+version = 1
+
+[[annotations]]
+path = "**"
+SPDX-FileCopyrightText = "NONE"
+SPDX-License-Identifier = "Unlicense"
+
+[[annotations]]
+path = [
+    "src/diff_match_patch.js",
+    "src/diff_match_patch_uncompressed.js"
+]
+SPDX-FileCopyrightText = "2018 The diff_match_patch Authors"
+SPDX-License-Identifier = "Apache-2.0"
+
