@@ -1,0 +1,35 @@
+
+
+{
+  "manifest_version": 3, 
+  "name": "Wooflejelly",
+  "version": 1.0,
+  "description": "Compares SPDX license texts and highlights differences.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Wooflejelly"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "contextMenus",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "*://raw.githubusercontent.com/spdx/license-list-data/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+} 
