@@ -16,7 +16,10 @@ type alias Model =
     , licenseA : String
     , licenseB : String
     , error : Maybe String 
+    , loading : Bool
+    , selectedText : Maybe String
     }
+
 
 init : () -> ( Model, Cmd Msg )
 init _ = 
@@ -24,6 +27,8 @@ init _ =
       , licenseA = "MIT"
       , licenseB = "Apache-2.0"
       , error = Nothing
+      , loading = False
+      , selectedText = Nothing
       }
     , Cmd.none 
     )
@@ -46,6 +51,8 @@ type Msg
     | RequestDiff
     | GotRawJson Json.Decode.Value
     | GotError String
+    | GotSelectedText String
+
 
 -- UPDATE
 
@@ -71,6 +78,11 @@ update msg model =
         GotError mesg ->
             ( { model | error = Just mesg, diffs = [] }, Cmd.none )
 
+        GotSelectedText txt -> 
+            -- Optionally update a 'selectedText' field in the model for diffing
+            ( { model | selectedText = Just txt }, Cmd.none )
+
+
 -- VIEW
 
 view : Model -> Html Msg
@@ -91,7 +103,15 @@ view model =
             
             Nothing -> 
                 div [] (List.map viewDiff model.diffs)        
-         ]
+         
+         , case model.selectedText of 
+            Just txt ->
+                div [] [ text "Selected text:", Html.pre [] [ text txt ] ]          
+            
+            Nothing -> 
+                text ""
+
+       ]
 
 
 viewDiff : Diff -> Html msg
@@ -141,6 +161,7 @@ port receiveDiffResult : (Json.Decode.Value -> msg) -> Sub msg
 
 port receiveDiffError : (String -> msg) -> Sub msg
 
+port receiveSelectedText : (String -> msg) -> Sub msg
 
 type Diff
     = Equal String
@@ -168,4 +189,5 @@ subscriptions _ =
     Sub.batch 
         [ receiveDiffResult GotRawJson
         , receiveDiffError GotError
+        , receiveSelectedText GotSelectedText
         ]

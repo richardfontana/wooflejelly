@@ -45,4 +45,11 @@ app.ports.requestDiff.subscribe(([idA, idB]) => {
 
 app.ports.receiveDiffError?.subscribe((msg) => {
   console.warn("Elm reported error:", msg);
-}); 
+});
+
+chrome.runtime.sendMessage({ type: "get-selected-text" }, (response) => {
+  if (response?.text) {
+    app.ports.receiveSelectedText?.send(response.text);
+  }
+});
+ 

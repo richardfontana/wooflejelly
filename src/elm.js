@@ -5163,7 +5163,7 @@ var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
-		{diffs: _List_Nil, error: $elm$core$Maybe$Nothing, licenseA: 'MIT', licenseB: 'Apache-2.0'},
+		{diffs: _List_Nil, error: $elm$core$Maybe$Nothing, licenseA: 'MIT', licenseB: 'Apache-2.0', loading: false, selectedText: $elm$core$Maybe$Nothing},
 		$elm$core$Platform$Cmd$none);
 };
 var $author$project$Main$GotError = function (a) {
@@ -5172,17 +5172,22 @@ var $author$project$Main$GotError = function (a) {
 var $author$project$Main$GotRawJson = function (a) {
 	return {$: 'GotRawJson', a: a};
 };
+var $author$project$Main$GotSelectedText = function (a) {
+	return {$: 'GotSelectedText', a: a};
+};
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$Main$receiveDiffError = _Platform_incomingPort('receiveDiffError', $elm$json$Json$Decode$string);
 var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $author$project$Main$receiveDiffResult = _Platform_incomingPort('receiveDiffResult', $elm$json$Json$Decode$value);
+var $author$project$Main$receiveSelectedText = _Platform_incomingPort('receiveSelectedText', $elm$json$Json$Decode$string);
 var $author$project$Main$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$batch(
 		_List_fromArray(
 			[
 				$author$project$Main$receiveDiffResult($author$project$Main$GotRawJson),
-				$author$project$Main$receiveDiffError($author$project$Main$GotError)
+				$author$project$Main$receiveDiffError($author$project$Main$GotError),
+				$author$project$Main$receiveSelectedText($author$project$Main$GotSelectedText)
 			]));
 };
 var $elm$json$Json$Decode$decodeValue = _Json_run;
@@ -5285,7 +5290,7 @@ var $author$project$Main$update = F2(
 							}),
 						$elm$core$Platform$Cmd$none);
 				}
-			default:
+			case 'GotError':
 				var mesg = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -5293,6 +5298,15 @@ var $author$project$Main$update = F2(
 						{
 							diffs: _List_Nil,
 							error: $elm$core$Maybe$Just(mesg)
+						}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var txt = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							selectedText: $elm$core$Maybe$Just(txt)
 						}),
 					$elm$core$Platform$Cmd$none);
 		}
@@ -5323,6 +5337,7 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
+var $elm$html$Html$pre = _VirtualDom_node('pre');
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
@@ -5497,6 +5512,28 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$div,
 						_List_Nil,
 						A2($elm$core$List$map, $author$project$Main$viewDiff, model.diffs));
+				}
+			}(),
+				function () {
+				var _v1 = model.selectedText;
+				if (_v1.$ === 'Just') {
+					var txt = _v1.a;
+					return A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Selected text:'),
+								A2(
+								$elm$html$Html$pre,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(txt)
+									]))
+							]));
+				} else {
+					return $elm$html$Html$text('');
 				}
 			}()
 			]));
