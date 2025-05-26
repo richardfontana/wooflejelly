@@ -1,34 +1,34 @@
-/* 
- * Copyright The Wooflejelly Authors
- * SPDX-License-Identifier: Apache-2.0
- */
 
 const app = Elm.Main.init({
   node: document.getElementById("elm-root"),
 });
 
-// When Elm requests a diff, run it in JS and send it back
-app.ports.requestDiff.subscribe(() => {
+const spdxBaseUrl = "https://raw.githubusercontent.com/spdx/license-list-data/main/text/";
 
-  const dmp = new diff_match_patch();
-  const diffs = dmp.diff_main(
-    "SPDX license identifiers are the best.",
-    "SPDX license identifiers are really good."
-  );
-  dmp.diff_cleanupSemantic(diffs);
+app.ports.requestDiff.subscribe(([idA, idB]) => {
+  console.log("Requesting diff for", idA, "vs", idB);
 
-  const result = [];	
-  for (let i = 0; i < diffs.length; i++) {
-    const op = diffs[i][0];
-    const text = diffs[i][1];
+  Promise.all([
+    fetch(spdxBaseUrl + idA + ".txt").then(res => res.text()),
+    fetch(spdxBaseUrl + idB + ".txt").then(res => res.text())
+  ])
+    .then(([textA, textB]) => {
+      const dmp = new diff_match_patch();
+      const diffs = dmp.diff_main(textA, textB);
+      dmp.diff_cleanupSemantic(diffs);
 
-    result.push({
-      op: op === 0 ? "equal" : op === 1 ? "insert" : "delete",
-      text: text
+      const result = [];	
+      for (let i = 0; i < diffs.length; i++) {
+        const op = diffs[i][0];
+        const text = diffs[i][1];
+
+        result.push({
+          op: op === 0 ? "equal" : op === 1 ? "insert" : "delete",
+          text: text
+        });
+      }    
+  
+      app.ports.receiveDiffResult.send(JSON.parse(JSON.stringify(result)));
     });
-  }    
-
-  console.log("Sending diff result:", result);
-  app.ports.receiveDiffResult.send(JSON.parse(JSON.stringify(result)));
 });
 

@@ -5163,7 +5163,7 @@ var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
-		{diffs: _List_Nil},
+		{diffs: _List_Nil, licenseA: 'MIT', licenseB: 'Apache-2.0'},
 		$elm$core$Platform$Cmd$none);
 };
 var $author$project$Main$GotRawJson = function (a) {
@@ -5205,21 +5205,53 @@ var $author$project$Main$diffDecoder = A3(
 	A2($elm$json$Json$Decode$field, 'op', $elm$json$Json$Decode$string),
 	A2($elm$json$Json$Decode$field, 'text', $elm$json$Json$Decode$string));
 var $elm$json$Json$Decode$list = _Json_decodeList;
-var $elm$core$Debug$log = _Debug_log;
-var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$Main$requestDiff = _Platform_outgoingPort(
 	'requestDiff',
 	function ($) {
-		return $elm$json$Json$Encode$null;
+		var a = $.a;
+		var b = $.b;
+		return A2(
+			$elm$json$Json$Encode$list,
+			$elm$core$Basics$identity,
+			_List_fromArray(
+				[
+					$elm$json$Json$Encode$string(a),
+					$elm$json$Json$Encode$string(b)
+				]));
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
+			case 'SelectA':
+				var id = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{licenseA: id}),
+					$elm$core$Platform$Cmd$none);
+			case 'SelectB':
+				var id = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{licenseB: id}),
+					$elm$core$Platform$Cmd$none);
 			case 'RequestDiff':
 				return _Utils_Tuple2(
 					model,
-					$author$project$Main$requestDiff(_Utils_Tuple0));
-			case 'GotRawJson':
+					$author$project$Main$requestDiff(
+						_Utils_Tuple2(model.licenseA, model.licenseB)));
+			default:
 				var value = msg.a;
 				var _v1 = A2(
 					$elm$json$Json$Decode$decodeValue,
@@ -5227,23 +5259,15 @@ var $author$project$Main$update = F2(
 					value);
 				if (_v1.$ === 'Ok') {
 					var diffs = _v1.a;
-					return A2(
-						$elm$core$Debug$log,
-						'Decoded diffs',
-						_Utils_Tuple2(
-							_Utils_update(
-								model,
-								{diffs: diffs}),
-							$elm$core$Platform$Cmd$none));
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{diffs: diffs}),
+						$elm$core$Platform$Cmd$none);
 				} else {
 					var err = _v1.a;
-					return A2(
-						$elm$core$Debug$log,
-						'Decode error',
-						_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
-			default:
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Main$RequestDiff = {$: 'RequestDiff'};

@@ -1,5 +1,3 @@
--- Copyright The Wooflejelly Authors
--- SPDX-License-Identifier: Apache-2.0
 
 port module Main exposing (main)
 
@@ -14,19 +12,37 @@ import Json.Decode as Decode exposing (Value)
 -- MODEL
 
 type alias Model = 
-    { diffs : List Diff }
+    { diffs : List Diff
+    , licenseA : String
+    , licenseB : String
+    }
 
 init : () -> ( Model, Cmd Msg )
 init _ = 
-    ( { diffs = [] }, Cmd.none )
+    ( { diffs = [] 
+      , licenseA = "MIT"
+      , licenseB = "Apache-2.0"
+      }
+    , Cmd.none 
+    )
+
+licenseOptions : List String
+licenseOptions = 
+    [ "MIT"
+    , "Apache-2.0"
+    , "GPL-3.0-or-later"
+    , "BSD-3-Clause"
+    , "CC0-1.0"
+    ]
 
 
 -- MESSAGES
 
 type Msg 
-    = RequestDiff
+    = SelectA String
+    | SelectB String
+    | RequestDiff
     | GotRawJson Json.Decode.Value
-    | GotDiff (List Diff)
 
 
 -- UPDATE
@@ -34,16 +50,21 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model = 
     case msg of
+        SelectA id -> 
+            ( { model | licenseA = id }, Cmd.none )
+
+        SelectB id ->
+            ( { model | licenseB = id }, Cmd.none) 
+
         RequestDiff ->
-            ( model, requestDiff () )
+            ( model, requestDiff ( model.licenseA, model.licenseB ) )
+        
         GotRawJson value -> 
             case Json.Decode.decodeValue (Json.Decode.list diffDecoder) value of 
                 Ok diffs -> 
-                    Debug.log "Decoded diffs" ( { model | diffs = diffs }, Cmd.none )
+                    ( { model | diffs = diffs }, Cmd.none )
                 Err err -> 
-                    Debug.log "Decode error" ( model, Cmd.none )
-        GotDiff _ ->
-            ( model, Cmd.none )
+                    ( model, Cmd.none )
 
 
 -- VIEW
@@ -82,7 +103,7 @@ main =
 
 -- PORTS
 
-port requestDiff : () -> Cmd msg
+port requestDiff : ( ( String, String ) -> Cmd msg )
 
 port receiveDiffResult : (Json.Decode.Value -> msg) -> Sub msg
 
