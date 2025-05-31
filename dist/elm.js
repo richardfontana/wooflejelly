@@ -3620,6 +3620,8 @@
         }
     });
     var $elm$html$Html$div = _VirtualDom_node('div');
+    var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+    var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
     var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
     var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
     var $author$project$Main$SelectCandidate = function (a) {
@@ -3639,19 +3641,26 @@
     };
     var $author$project$Main$viewCandidate = function (candidate) {
         return A2($elm$html$Html$button, _List_fromArray([
-            $elm$html$Html$Events$onClick($author$project$Main$SelectCandidate(candidate.licenseId))
+            $elm$html$Html$Events$onClick($author$project$Main$SelectCandidate(candidate.licenseId)),
+            A2($elm$html$Html$Attributes$style, 'display', 'block'),
+            A2($elm$html$Html$Attributes$style, 'margin', '0.5em 0')
         ]), _List_fromArray([
-            $elm$html$Html$text(candidate.licenseId + (' (' + ($elm$core$String$fromFloat(candidate.score) + ')')))
+            $elm$html$Html$text(candidate.licenseId + (' (score: ' + ($elm$core$String$fromFloat(candidate.score) + ')')))
         ]));
     };
     var $author$project$Main$view = function (model) {
         return A2($elm$html$Html$div, _List_Nil, _List_fromArray([
+            A2($elm$html$Html$div, _List_Nil, _List_fromArray([
+                $elm$html$Html$text('Top License Matches:')
+            ])),
             A2($elm$html$Html$div, _List_Nil, A2($elm$core$List$map, $author$project$Main$viewCandidate, model.candidates)),
             function () {
                 var _v0 = model.selectedLicenseId;
                 if (_v0.$ === 'Just') {
                     var id = _v0.a;
-                    return A2($elm$html$Html$div, _List_Nil, _List_fromArray([
+                    return A2($elm$html$Html$div, _List_fromArray([
+                        A2($elm$html$Html$Attributes$style, 'margin-top', '1em')
+                    ]), _List_fromArray([
                         $elm$html$Html$text('Selected: ' + id)
                     ]));
                 }

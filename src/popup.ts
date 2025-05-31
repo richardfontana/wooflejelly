@@ -65,14 +65,22 @@ loadSpdxLicenses().then(licenses => {
 
 app.ports.requestDiffFor?.subscribe(async (licenseId: string) => {
   const licenseText = await fetchLicenseText(licenseId);
-
   const dmp = new diff_match_patch();
   const diffs = dmp.diff_main(selectedText, licenseText);
   dmp.diff_cleanupSemantic(diffs);
 
   const diffHtml = dmp.diff_prettyHtml(diffs);
 
-  // Example: send back to Elm (assuming such a port exists)
-  // app.ports.receiveDiffResult?.send(diffHtml);
+  const container = document.getElementById("diff-output");
+  if (container) {
+    container.innerHTML =diffHtml;
+  }
+});
+
+app.ports.receiveDiffResult?.subscribe((diffHtml: string) => {
+  const container = document.getElementById("diff-output");
+  if (container) {
+    container.innerHTML = diffHtml;
+  }
 });
 

@@ -1,12 +1,10 @@
 port module Main exposing (main)
 
-import Json.Decode
-
 import Browser
 import Html exposing (Html, button, div, text)
 import Html.Events exposing (onClick)
+import Html.Attributes exposing (style)
 import Json.Decode as Decode exposing (Decoder)
-
 
 -- MAIN
 
@@ -68,16 +66,27 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div [] (List.map viewCandidate model.candidates)
+        [ div [] 
+            [ text "Top License Matches:" ]
+        , div []
+            (List.map viewCandidate model.candidates)
         , case model.selectedLicenseId of
-            Just id -> div [] [ text ("Selected: " ++ id) ]
-            Nothing -> text ""
-        ]
+            Just id -> 
+                div [ style "margin-top" "1em" ]
+                    [ text ("Selected: " ++ id) ]
+
+            Nothing ->
+                text ""
+         ]
 
 viewCandidate : DiffCandidate -> Html Msg
 viewCandidate candidate =
-    button [ onClick (SelectCandidate candidate.licenseId) ]
-        [ text (candidate.licenseId ++ " (" ++ String.fromFloat candidate.score ++ ")") ]
+    button 
+        [ onClick (SelectCandidate candidate.licenseId) 
+        , style "display" "block"
+        , style "margin"  "0.5em 0"
+        ]
+        [ text (candidate.licenseId ++ " (score: " ++ String.fromFloat candidate.score ++ ")") ]
 
 
 -- PORTS
@@ -86,8 +95,7 @@ port receiveDiffCandidates : (Decode.Value -> msg) -> Sub msg
 
 port requestDiffFor : String -> Cmd msg
 
-
--- JSON DECODERS
+-- DECODERS
 
 decodeCandidate : Decoder DiffCandidate
 decodeCandidate =
@@ -113,4 +121,4 @@ subscriptions model =
                 Err _ ->
                     GotDiffCandidates [] -- fallback error handling
         )
-
+        

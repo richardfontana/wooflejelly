@@ -44,6 +44,14 @@ app.ports.requestDiffFor?.subscribe(async (licenseId) => {
     const diffs = dmp.diff_main(selectedText, licenseText);
     dmp.diff_cleanupSemantic(diffs);
     const diffHtml = dmp.diff_prettyHtml(diffs);
-    // Example: send back to Elm (assuming such a port exists)
-    // app.ports.receiveDiffResult?.send(diffHtml);
+    const container = document.getElementById("diff-output");
+    if (container) {
+        container.innerHTML = diffHtml;
+    }
+});
+app.ports.receiveDiffResult?.subscribe((diffHtml) => {
+    const container = document.getElementById("diff-output");
+    if (container) {
+        container.innerHTML = diffHtml;
+    }
 });
