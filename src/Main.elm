@@ -163,6 +163,8 @@ port receiveDiffError : (String -> msg) -> Sub msg
 
 port receiveSelectedText : (String -> msg) -> Sub msg
 
+port receiveMatchedLicense : (String -> msg) -> Sub msg
+
 type Diff
     = Equal String
     | Insert String
