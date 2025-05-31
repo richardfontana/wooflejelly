@@ -1,48 +1,49 @@
 "use strict";
-const app = Elm.Main.init({
-    node: document.getElementById("elm-root")
+// @ts-ignore
+const dmp = new diff_match_patch();
+const app = Elm.Main.init({ node: document.getElementById("elm-root") });
+// This should point to your actual SPDX license text source.
+// For now, we use this sample for demonstration.
+const spdxLicenseIds = ["MIT", "Apache-2.0", "GPL-3.0-only"];
+async function fetchLicenseText(id) {
+    const url = `https://raw.githubusercontent.com/spdx/license-list-data/main/text/${id}.txt`;
+    const response = await fetch(url);
+    return await response.text();
+}
+async function loadSpdxLicenses() {
+    return await Promise.all(spdxLicenseIds.map(async (id) => ({
+        id,
+        text: await fetchLicenseText(id),
+    })));
+}
+function computeSimilarity(a, b) {
+    const dmp = new diff_match_patch();
+    const diffs = dmp.diff_main(a, b);
+    const totalLength = a.length + b.length;
+    const unchanged = diffs
+        .filter(([op]) => op === 0)
+        .reduce((sum, [, text]) => sum + text.length, 0);
+    return unchanged / (totalLength / 2);
+}
+function findTopMatches(selectedText, licenses, topN = 3) {
+    const candidates = licenses.map(({ id, text }) => ({
+        licenseId: id,
+        score: computeSimilarity(selectedText, text),
+    }));
+    return candidates.sort((a, b) => b.score - a.score).slice(0, topN);
+}
+// Your selected text from the page (replace with actual selection logic)
+const selectedText = "Permission is hereby granted, free of charge, to any person obtaining a copy...";
+loadSpdxLicenses().then(licenses => {
+    const topMatches = findTopMatches(selectedText, licenses);
+    app.ports.receiveDiffCandidates?.send(topMatches);
 });
-const spdxBaseUrl = "https://raw.githubusercontent.com/spdx/license-list-data/main/text/";
-app.ports.requestDiff.subscribe(([idA, idB]) => {
-    Promise.all([
-        fetch(spdxBaseUrl + idA + ".txt").then(res => {
-            if (!res.ok)
-                throw new Error(`Failed to fetch ${idA}`);
-            return res.text();
-        }),
-        fetch(spdxBaseUrl + idB + ".txt").then(res => {
-            if (!res.ok)
-                throw new Error(`Failed to fetch ${idB}`);
-            return res.text();
-        })
-    ])
-        .then(([textA, textB]) => {
-        const dmp = new diff_match_patch();
-        const diffs = dmp.diff_main(textA, textB);
-        dmp.diff_cleanupSemantic(diffs);
-        const result = [];
-        for (let i = 0; i < diffs.length; i++) {
-            const op = diffs[i][0];
-            const text = diffs[i][1];
-            result.push({
-                op: op === 0 ? "equal" : op === 1 ? "insert" : "delete",
-                text
-            });
-        }
-        app.ports.receiveDiffResult.send(result);
-    })
-        .catch(err => {
-        console.error("Diff failed:", err);
-        app.ports.receiveDiffError.send(err.message);
-    });
-});
-/*
-app.ports.receiveDiffError?.subscribe((msg) => {
-  console.warn("Elm reported error:", msg);
-});
-*/
-chrome.runtime.sendMessage({ type: "get-selected-text" }, (response) => {
-    if (response?.text) {
-        app.ports.receiveSelectedText?.send(response.text);
-    }
+app.ports.requestDiffFor?.subscribe(async (licenseId) => {
+    const licenseText = await fetchLicenseText(licenseId);
+    const dmp = new diff_match_patch();
+    const diffs = dmp.diff_main(selectedText, licenseText);
+    dmp.diff_cleanupSemantic(diffs);
+    const diffHtml = dmp.diff_prettyHtml(diffs);
+    // Example: send back to Elm (assuming such a port exists)
+    // app.ports.receiveDiffResult?.send(diffHtml);
 });

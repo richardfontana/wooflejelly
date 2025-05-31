@@ -80,190 +80,6 @@ function A9(fun, a, b, c, d, e, f, g, h, i) {
 console.warn('Compiled in DEV mode. Follow the advice at https://elm-lang.org/0.19.1/optimize for better performance and smaller assets.');
 
 
-// EQUALITY
-
-function _Utils_eq(x, y)
-{
-	for (
-		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
-		isEqual && (pair = stack.pop());
-		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
-		)
-	{}
-
-	return isEqual;
-}
-
-function _Utils_eqHelp(x, y, depth, stack)
-{
-	if (x === y)
-	{
-		return true;
-	}
-
-	if (typeof x !== 'object' || x === null || y === null)
-	{
-		typeof x === 'function' && _Debug_crash(5);
-		return false;
-	}
-
-	if (depth > 100)
-	{
-		stack.push(_Utils_Tuple2(x,y));
-		return true;
-	}
-
-	/**/
-	if (x.$ === 'Set_elm_builtin')
-	{
-		x = $elm$core$Set$toList(x);
-		y = $elm$core$Set$toList(y);
-	}
-	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	/**_UNUSED/
-	if (x.$ < 0)
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	for (var key in x)
-	{
-		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-var _Utils_equal = F2(_Utils_eq);
-var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
-
-
-
-// COMPARISONS
-
-// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
-// the particular integer values assigned to LT, EQ, and GT.
-
-function _Utils_cmp(x, y, ord)
-{
-	if (typeof x !== 'object')
-	{
-		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
-	}
-
-	/**/
-	if (x instanceof String)
-	{
-		var a = x.valueOf();
-		var b = y.valueOf();
-		return a === b ? 0 : a < b ? -1 : 1;
-	}
-	//*/
-
-	/**_UNUSED/
-	if (typeof x.$ === 'undefined')
-	//*/
-	/**/
-	if (x.$[0] === '#')
-	//*/
-	{
-		return (ord = _Utils_cmp(x.a, y.a))
-			? ord
-			: (ord = _Utils_cmp(x.b, y.b))
-				? ord
-				: _Utils_cmp(x.c, y.c);
-	}
-
-	// traverse conses until end of a list or a mismatch
-	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
-	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
-}
-
-var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
-var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
-var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
-var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
-
-var _Utils_compare = F2(function(x, y)
-{
-	var n = _Utils_cmp(x, y);
-	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
-});
-
-
-// COMMON VALUES
-
-var _Utils_Tuple0_UNUSED = 0;
-var _Utils_Tuple0 = { $: '#0' };
-
-function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
-function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
-
-function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
-function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
-
-function _Utils_chr_UNUSED(c) { return c; }
-function _Utils_chr(c) { return new String(c); }
-
-
-// RECORDS
-
-function _Utils_update(oldRecord, updatedFields)
-{
-	var newRecord = {};
-
-	for (var key in oldRecord)
-	{
-		newRecord[key] = oldRecord[key];
-	}
-
-	for (var key in updatedFields)
-	{
-		newRecord[key] = updatedFields[key];
-	}
-
-	return newRecord;
-}
-
-
-// APPEND
-
-var _Utils_append = F2(_Utils_ap);
-
-function _Utils_ap(xs, ys)
-{
-	// append Strings
-	if (typeof xs === 'string')
-	{
-		return xs + ys;
-	}
-
-	// append Lists
-	if (!xs.b)
-	{
-		return ys;
-	}
-	var root = _List_Cons(xs.a, ys);
-	xs = xs.b
-	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		curr = curr.b = _List_Cons(xs.a, ys);
-	}
-	return root;
-}
-
-
-
 var _List_Nil_UNUSED = { $: 0 };
 var _List_Nil = { $: '[]' };
 
@@ -789,6 +605,190 @@ function _Debug_regionToString(region)
 		return 'on line ' + region.start.line;
 	}
 	return 'on lines ' + region.start.line + ' through ' + region.end.line;
+}
+
+
+
+// EQUALITY
+
+function _Utils_eq(x, y)
+{
+	for (
+		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
+		isEqual && (pair = stack.pop());
+		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
+		)
+	{}
+
+	return isEqual;
+}
+
+function _Utils_eqHelp(x, y, depth, stack)
+{
+	if (x === y)
+	{
+		return true;
+	}
+
+	if (typeof x !== 'object' || x === null || y === null)
+	{
+		typeof x === 'function' && _Debug_crash(5);
+		return false;
+	}
+
+	if (depth > 100)
+	{
+		stack.push(_Utils_Tuple2(x,y));
+		return true;
+	}
+
+	/**/
+	if (x.$ === 'Set_elm_builtin')
+	{
+		x = $elm$core$Set$toList(x);
+		y = $elm$core$Set$toList(y);
+	}
+	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	/**_UNUSED/
+	if (x.$ < 0)
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	for (var key in x)
+	{
+		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+var _Utils_equal = F2(_Utils_eq);
+var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
+
+
+
+// COMPARISONS
+
+// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
+// the particular integer values assigned to LT, EQ, and GT.
+
+function _Utils_cmp(x, y, ord)
+{
+	if (typeof x !== 'object')
+	{
+		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
+	}
+
+	/**/
+	if (x instanceof String)
+	{
+		var a = x.valueOf();
+		var b = y.valueOf();
+		return a === b ? 0 : a < b ? -1 : 1;
+	}
+	//*/
+
+	/**_UNUSED/
+	if (typeof x.$ === 'undefined')
+	//*/
+	/**/
+	if (x.$[0] === '#')
+	//*/
+	{
+		return (ord = _Utils_cmp(x.a, y.a))
+			? ord
+			: (ord = _Utils_cmp(x.b, y.b))
+				? ord
+				: _Utils_cmp(x.c, y.c);
+	}
+
+	// traverse conses until end of a list or a mismatch
+	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
+	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
+}
+
+var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
+var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
+var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
+var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
+
+var _Utils_compare = F2(function(x, y)
+{
+	var n = _Utils_cmp(x, y);
+	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
+});
+
+
+// COMMON VALUES
+
+var _Utils_Tuple0_UNUSED = 0;
+var _Utils_Tuple0 = { $: '#0' };
+
+function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
+function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
+
+function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
+function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
+
+function _Utils_chr_UNUSED(c) { return c; }
+function _Utils_chr(c) { return new String(c); }
+
+
+// RECORDS
+
+function _Utils_update(oldRecord, updatedFields)
+{
+	var newRecord = {};
+
+	for (var key in oldRecord)
+	{
+		newRecord[key] = oldRecord[key];
+	}
+
+	for (var key in updatedFields)
+	{
+		newRecord[key] = updatedFields[key];
+	}
+
+	return newRecord;
+}
+
+
+// APPEND
+
+var _Utils_append = F2(_Utils_ap);
+
+function _Utils_ap(xs, ys)
+{
+	// append Strings
+	if (typeof xs === 'string')
+	{
+		return xs + ys;
+	}
+
+	// append Lists
+	if (!xs.b)
+	{
+		return ys;
+	}
+	var root = _List_Cons(xs.a, ys);
+	xs = xs.b
+	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		curr = curr.b = _List_Cons(xs.a, ys);
+	}
+	return root;
 }
 
 
@@ -4371,9 +4371,32 @@ function _Browser_load(url)
 	}));
 }
 var $elm$core$Basics$EQ = {$: 'EQ'};
-var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
+var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
+var $elm$core$Array$foldr = F3(
+	function (func, baseCase, _v0) {
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (node.$ === 'SubTree') {
+					var subTree = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
+				} else {
+					var values = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
+				}
+			});
+		return A3(
+			$elm$core$Elm$JsArray$foldr,
+			helper,
+			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
+			tree);
+	});
+var $elm$core$Array$toList = function (array) {
+	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
+};
 var $elm$core$Dict$foldr = F3(
 	function (func, acc, t) {
 		foldr:
@@ -4426,30 +4449,7 @@ var $elm$core$Set$toList = function (_v0) {
 	var dict = _v0.a;
 	return $elm$core$Dict$keys(dict);
 };
-var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
-var $elm$core$Array$foldr = F3(
-	function (func, baseCase, _v0) {
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = F2(
-			function (node, acc) {
-				if (node.$ === 'SubTree') {
-					var subTree = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
-				} else {
-					var values = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
-				}
-			});
-		return A3(
-			$elm$core$Elm$JsArray$foldr,
-			helper,
-			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
-			tree);
-	});
-var $elm$core$Array$toList = function (array) {
-	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
-};
+var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -5159,167 +5159,71 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
+var $author$project$Main$initialModel = {candidates: _List_Nil, selectedLicenseId: $elm$core$Maybe$Nothing};
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$Main$init = function (_v0) {
-	return _Utils_Tuple2(
-		{diffs: _List_Nil, error: $elm$core$Maybe$Nothing, licenseA: 'MIT', licenseB: 'Apache-2.0', loading: false, selectedText: $elm$core$Maybe$Nothing},
-		$elm$core$Platform$Cmd$none);
+var $author$project$Main$GotDiffCandidates = function (a) {
+	return {$: 'GotDiffCandidates', a: a};
 };
-var $author$project$Main$GotError = function (a) {
-	return {$: 'GotError', a: a};
-};
-var $author$project$Main$GotRawJson = function (a) {
-	return {$: 'GotRawJson', a: a};
-};
-var $author$project$Main$GotSelectedText = function (a) {
-	return {$: 'GotSelectedText', a: a};
-};
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$Main$receiveDiffError = _Platform_incomingPort('receiveDiffError', $elm$json$Json$Decode$string);
-var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $author$project$Main$receiveDiffResult = _Platform_incomingPort('receiveDiffResult', $elm$json$Json$Decode$value);
-var $author$project$Main$receiveSelectedText = _Platform_incomingPort('receiveSelectedText', $elm$json$Json$Decode$string);
-var $author$project$Main$subscriptions = function (_v0) {
-	return $elm$core$Platform$Sub$batch(
-		_List_fromArray(
-			[
-				$author$project$Main$receiveDiffResult($author$project$Main$GotRawJson),
-				$author$project$Main$receiveDiffError($author$project$Main$GotError),
-				$author$project$Main$receiveSelectedText($author$project$Main$GotSelectedText)
-			]));
-};
-var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $author$project$Main$DiffCandidate = F2(
+	function (licenseId, score) {
+		return {licenseId: licenseId, score: score};
+	});
 var $elm$json$Json$Decode$field = _Json_decodeField;
-var $author$project$Main$Delete = function (a) {
-	return {$: 'Delete', a: a};
-};
-var $author$project$Main$Equal = function (a) {
-	return {$: 'Equal', a: a};
-};
-var $author$project$Main$Insert = function (a) {
-	return {$: 'Insert', a: a};
-};
-var $author$project$Main$makeDiff = F2(
-	function (op, text) {
-		switch (op) {
-			case 'equal':
-				return $author$project$Main$Equal(text);
-			case 'insert':
-				return $author$project$Main$Insert(text);
-			case 'delete':
-				return $author$project$Main$Delete(text);
-			default:
-				return $author$project$Main$Equal(text);
-		}
-	});
-var $author$project$Main$diffDecoder = A3(
+var $elm$json$Json$Decode$float = _Json_decodeFloat;
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$decodeCandidate = A3(
 	$elm$json$Json$Decode$map2,
-	$author$project$Main$makeDiff,
-	A2($elm$json$Json$Decode$field, 'op', $elm$json$Json$Decode$string),
-	A2($elm$json$Json$Decode$field, 'text', $elm$json$Json$Decode$string));
+	$author$project$Main$DiffCandidate,
+	A2($elm$json$Json$Decode$field, 'licenseId', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'score', $elm$json$Json$Decode$float));
 var $elm$json$Json$Decode$list = _Json_decodeList;
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
+var $author$project$Main$decodeCandidateList = $elm$json$Json$Decode$list($author$project$Main$decodeCandidate);
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $author$project$Main$receiveDiffCandidates = _Platform_incomingPort('receiveDiffCandidates', $elm$json$Json$Decode$value);
+var $author$project$Main$subscriptions = function (model) {
+	return $author$project$Main$receiveDiffCandidates(
+		function (value) {
+			var _v0 = A2($elm$json$Json$Decode$decodeValue, $author$project$Main$decodeCandidateList, value);
+			if (_v0.$ === 'Ok') {
+				var candidates = _v0.a;
+				return $author$project$Main$GotDiffCandidates(candidates);
+			} else {
+				return $author$project$Main$GotDiffCandidates(_List_Nil);
+			}
+		});
+};
 var $elm$json$Json$Encode$string = _Json_wrap;
-var $author$project$Main$requestDiff = _Platform_outgoingPort(
-	'requestDiff',
-	function ($) {
-		var a = $.a;
-		var b = $.b;
-		return A2(
-			$elm$json$Json$Encode$list,
-			$elm$core$Basics$identity,
-			_List_fromArray(
-				[
-					$elm$json$Json$Encode$string(a),
-					$elm$json$Json$Encode$string(b)
-				]));
-	});
+var $author$project$Main$requestDiffFor = _Platform_outgoingPort('requestDiffFor', $elm$json$Json$Encode$string);
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		switch (msg.$) {
-			case 'SelectA':
-				var id = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{licenseA: id}),
-					$elm$core$Platform$Cmd$none);
-			case 'SelectB':
-				var id = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{licenseB: id}),
-					$elm$core$Platform$Cmd$none);
-			case 'RequestDiff':
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{error: $elm$core$Maybe$Nothing}),
-					$author$project$Main$requestDiff(
-						_Utils_Tuple2(model.licenseA, model.licenseB)));
-			case 'GotRawJson':
-				var value = msg.a;
-				var _v1 = A2(
-					$elm$json$Json$Decode$decodeValue,
-					$elm$json$Json$Decode$list($author$project$Main$diffDecoder),
-					value);
-				if (_v1.$ === 'Ok') {
-					var diffs = _v1.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{diffs: diffs, error: $elm$core$Maybe$Nothing}),
-						$elm$core$Platform$Cmd$none);
-				} else {
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								error: $elm$core$Maybe$Just('Decoding failed.')
-							}),
-						$elm$core$Platform$Cmd$none);
-				}
-			case 'GotError':
-				var mesg = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							diffs: _List_Nil,
-							error: $elm$core$Maybe$Just(mesg)
-						}),
-					$elm$core$Platform$Cmd$none);
-			default:
-				var txt = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							selectedText: $elm$core$Maybe$Just(txt)
-						}),
-					$elm$core$Platform$Cmd$none);
+		if (msg.$ === 'GotDiffCandidates') {
+			var candidates = msg.a;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{candidates: candidates}),
+				$elm$core$Platform$Cmd$none);
+		} else {
+			var licenseId = msg.a;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						selectedLicenseId: $elm$core$Maybe$Just(licenseId)
+					}),
+				$author$project$Main$requestDiffFor(licenseId));
 		}
 	});
-var $author$project$Main$RequestDiff = {$: 'RequestDiff'};
-var $author$project$Main$SelectA = function (a) {
-	return {$: 'SelectA', a: a};
-};
-var $author$project$Main$SelectB = function (a) {
-	return {$: 'SelectB', a: a};
+var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Main$SelectCandidate = function (a) {
+	return {$: 'SelectCandidate', a: a};
 };
 var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$core$String$fromFloat = _String_fromNumber;
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -5337,130 +5241,20 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$html$Html$pre = _VirtualDom_node('pre');
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $elm$html$Html$span = _VirtualDom_node('span');
-var $author$project$Main$viewDiff = function (diff) {
-	switch (diff.$) {
-		case 'Equal':
-			var txt = diff.a;
-			return A2(
-				$elm$html$Html$span,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(txt)
-					]));
-		case 'Insert':
-			var txt = diff.a;
-			return A2(
-				$elm$html$Html$span,
-				_List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'background-color', '#dfd')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text(txt)
-					]));
-		default:
-			var txt = diff.a;
-			return A2(
-				$elm$html$Html$span,
-				_List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'background-color', '#fdd'),
-						A2($elm$html$Html$Attributes$style, 'text-decoration', 'line-through')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text(txt)
-					]));
-	}
-};
-var $author$project$Main$licenseOptions = _List_fromArray(
-	['MIT', 'Apache-2.0', 'GPL-3.0-or-later', 'BSD-3-Clause', 'CC0-1.0']);
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
+var $author$project$Main$viewCandidate = function (candidate) {
 	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+		$elm$html$Html$button,
+		_List_fromArray(
+			[
+				$elm$html$Html$Events$onClick(
+				$author$project$Main$SelectCandidate(candidate.licenseId))
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(
+				candidate.licenseId + (' (' + ($elm$core$String$fromFloat(candidate.score) + ')')))
+			]));
 };
-var $elm$html$Html$select = _VirtualDom_node('select');
-var $elm$html$Html$option = _VirtualDom_node('option');
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
-var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
-var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
-var $author$project$Main$viewOption = F2(
-	function (selected, current) {
-		return A2(
-			$elm$html$Html$option,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$value(current),
-					$elm$html$Html$Attributes$selected(
-					_Utils_eq(current, selected))
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text(current)
-				]));
-	});
-var $author$project$Main$viewSelect = F2(
-	function (msgConstructor, selectedValue) {
-		return A2(
-			$elm$html$Html$select,
-			_List_fromArray(
-				[
-					$elm$html$Html$Events$onInput(msgConstructor)
-				]),
-			A2(
-				$elm$core$List$map,
-				$author$project$Main$viewOption(selectedValue),
-				$author$project$Main$licenseOptions));
-	});
 var $author$project$Main$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -5470,67 +5264,17 @@ var $author$project$Main$view = function (model) {
 				A2(
 				$elm$html$Html$div,
 				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('License A: '),
-						A2($author$project$Main$viewSelect, $author$project$Main$SelectA, model.licenseA)
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('License B: '),
-						A2($author$project$Main$viewSelect, $author$project$Main$SelectB, model.licenseB)
-					])),
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Events$onClick($author$project$Main$RequestDiff)
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Run Diff')
-					])),
+				A2($elm$core$List$map, $author$project$Main$viewCandidate, model.candidates)),
 				function () {
-				var _v0 = model.error;
+				var _v0 = model.selectedLicenseId;
 				if (_v0.$ === 'Just') {
-					var msg = _v0.a;
-					return A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'color', 'red')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Error: ' + msg)
-							]));
-				} else {
-					return A2(
-						$elm$html$Html$div,
-						_List_Nil,
-						A2($elm$core$List$map, $author$project$Main$viewDiff, model.diffs));
-				}
-			}(),
-				function () {
-				var _v1 = model.selectedText;
-				if (_v1.$ === 'Just') {
-					var txt = _v1.a;
+					var id = _v0.a;
 					return A2(
 						$elm$html$Html$div,
 						_List_Nil,
 						_List_fromArray(
 							[
-								$elm$html$Html$text('Selected text:'),
-								A2(
-								$elm$html$Html$pre,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm$html$Html$text(txt)
-									]))
+								$elm$html$Html$text('Selected: ' + id)
 							]));
 				} else {
 					return $elm$html$Html$text('');
@@ -5539,6 +5283,13 @@ var $author$project$Main$view = function (model) {
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
-	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
+	{
+		init: function (_v0) {
+			return _Utils_Tuple2($author$project$Main$initialModel, $elm$core$Platform$Cmd$none);
+		},
+		subscriptions: $author$project$Main$subscriptions,
+		update: $author$project$Main$update,
+		view: $author$project$Main$view
+	});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
