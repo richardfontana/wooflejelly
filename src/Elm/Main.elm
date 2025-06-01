@@ -1,4 +1,4 @@
-port module Main exposing (main)
+port module Elm.Main exposing (main)
 
 import Browser
 import Html exposing (Html, button, div, text)

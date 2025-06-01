@@ -1,4 +1,5 @@
-# elm-package generated files
-elm-stuff
-# elm-repl generated files
-repl-temp-*
+# Ignore Elm build cache
+/elm-stuff/
+
+# Ignore compiled JS output
+/dist/*.js
