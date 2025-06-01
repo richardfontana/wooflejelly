@@ -17,14 +17,13 @@
   "host_permissions": [
     "*://raw.githubusercontent.com/spdx/license-list-data/*"
   ],
-  "content-scripts": [
+  "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["dist/content-script.js"],
-      "run-at": "document_idle"
+      "js": ["dist/content-script.js"]
     }
   ],
   "background": {
-    "service-worker": "dist/background.js"
+    "service_worker": "dist/background.js"
   }
 } 

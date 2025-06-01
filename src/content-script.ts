@@ -8,4 +8,19 @@ document.addEventListener("mouseup", () => {
   }
 });
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "GET_SELECTION") {
+    const selection = window.getSelection()?.toString() || "";
+    sendResponse({ selectedText: selection });
+  }
+});
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+
+  if (message.type === "GET_SELECTION") {
+    const selection = window.getSelection()?.toString() || "";
+    sendResponse({ selectedText: selection });
+  }
+});
+
 

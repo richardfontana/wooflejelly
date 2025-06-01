@@ -1,19 +1,17 @@
-let lastSelectedText = "";
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "REQUEST_SELECTION") {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tabId = tabs[0]?.id;
+      if (tabId !== undefined) {
+        chrome.tabs.sendMessage(tabId, { type: "GET_SELECTION" }, (response) => {
+          sendResponse(response); // will include { selectedText }
+        });
+      }
+    });
 
-chrome.runtime.onMessage.addListener(
-  (
-    message: { type: string; text?: string }, 
-    sender: chrome.runtime.MessageSender, 
-    sendResponse: (response: { text?: string }) => void
-  ) => {
-  if (message.type === "selected-text" && message.text) {
-    lastSelectedText = message.text;
-    return; // no response expected 
-  }
-
-  if (message.type === "get-selected-text") {
-    sendResponse({ text: lastSelectedText });
-    return true; // keep the message channel open for sendResponse
+    // Important! Keeps the message channel open for async response
+    return true;
   }
 });
+
 
