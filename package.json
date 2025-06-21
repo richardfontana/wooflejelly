@@ -1,0 +1,23 @@
+{
+  "name": "wooflejelly",
+  "version": "1.0.0",
+  "description": "![](images/wooflejelly.jpg)",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/chrome": "^0.0.326",
+    "@types/diff-match-patch": "^1.0.36",
+    "@types/jest": "^30.0.0",
+    "jest": "^30.0.2",
+    "ts-jest": "^29.4.0"
+  },
+  "dependencies": {
+    "diff-match-patch": "^1.0.5"
+  }
+}
