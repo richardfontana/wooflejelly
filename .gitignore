@@ -3,3 +3,4 @@
 
 # Ignore compiled JS output
 /dist/*.js
+/node_modules/
