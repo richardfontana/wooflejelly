@@ -80,7 +80,7 @@ app.ports.requestDiffFor?.subscribe(async (licenseId: string) => {
 
   const container = document.getElementById("diff-output");
   if (container) {
-    container.innerHTML =diffHtml;
+    container.innerHTML = diffHtml;
   }
 });
 
