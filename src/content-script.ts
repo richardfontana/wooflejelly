@@ -14,5 +14,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ selectedText: selection });
   }
 });
-
-
